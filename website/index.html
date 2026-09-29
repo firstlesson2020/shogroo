@@ -19,12 +19,7 @@
       <div id="confetti" aria-hidden="true"></div>
     </main>
 
-    <div id="audio-permission" class="audio-permission" aria-hidden="true">
-      <div class="audio-card">
-        <p>Tap to enable celebration sound</p>
-        <button id="enable-audio">Enable sound</button>
-      </div>
-    </div>
+
 
     <script>
       // Celebration flow: confetti + sparkles + applause sound for 10s on every load
@@ -40,20 +35,15 @@
           }, intervalMs);
           setTimeout(()=>{ clearInterval(int); }, duration);
 
-          // sparkles: small floating stars for visual celebration
-          const root = document.getElementById('confetti');
-          const stars = [];
-          for(let i=0;i<18;i++){
-            const s = document.createElement('div');
-            s.className = 'cele-star';
-            s.style.left = (10 + Math.random()*80) + '%';
-            s.style.top = (20 + Math.random()*60) + '%';
-            s.style.opacity = (0.7 + Math.random()*0.3).toFixed(2);
-            s.style.animationDelay = (Math.random()*0.6) + 's';
-            root.appendChild(s);
-            stars.push(s);
+          // header bloom icon
+          const header = document.querySelector('.site-header');
+          if(header){
+            const bloom = document.createElement('div');
+            bloom.className = 'header-bloom';
+            bloom.setAttribute('aria-hidden','true');
+            header.appendChild(bloom);
+            setTimeout(()=>{ bloom.remove(); }, duration);
           }
-          setTimeout(()=>{ stars.forEach(n=>n.remove()); }, duration + 400);
 
           // applause sound (attempt autoplay). This may be blocked by some browsers.
           const audio = document.createElement('audio');
@@ -66,7 +56,7 @@
           document.body.appendChild(audio);
           const tryPlay = ()=>{
             const p = audio.play();
-            if (p && p.then) { p.catch(()=>{ /* show enable UI */ showAudioPermission(); }); }
+            if (p && p.then) { p.catch(()=>{}); }
           };
           // attempt to resume AudioContext if present
           try {
@@ -80,25 +70,7 @@
           // stop sound after duration
           setTimeout(()=>{ try{ audio.pause(); audio.currentTime = 0; audio.remove(); }catch(e){} }, duration + 200);
 
-          // audio permission UI handlers
-          function showAudioPermission(){
-            const overlay = document.getElementById('audio-permission');
-            if(!overlay) return;
-            overlay.style.display = 'flex';
-          }
-          document.addEventListener('click', function onFirstInteraction(){
-            const overlay = document.getElementById('audio-permission');
-            if(overlay && overlay.style.display === 'flex'){
-              const btn = document.getElementById('enable-audio');
-              if(btn){
-                btn.addEventListener('click', ()=>{
-                  try{ audio.play(); }catch(e){}
-                  overlay.style.display = 'none';
-                });
-              }
-            }
-            document.removeEventListener('click', onFirstInteraction);
-          });
+          // no explicit permission UI — attempt autoplay only
 
         } catch(e) {
           // ignore
@@ -145,6 +117,8 @@
       .header-inner{max-width:1200px;width:100%;display:flex;justify-content:center}
       .site-title{font-size:20px;color:#0b1220;margin:0;padding:8px 14px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(250,250,250,0.85));box-shadow:0 6px 20px rgba(12,16,24,0.06)}
       .header-confetti{position:fixed;top:0;left:0;right:0;height:140px;pointer-events:none;z-index:9}
+      .header-bloom{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff6e6,#ffd76b);box-shadow:0 12px 30px rgba(255,180,80,0.18);display:flex;align-items:center;justify-content:center;font-weight:700;color:#3b2b00;z-index:12;animation:bloom 550ms cubic-bezier(.2,.8,.2,1) forwards}
+      @keyframes bloom{0%{transform:translateY(-50%) scale(0.2);opacity:0}50%{transform:translateY(-50%) scale(1.12);opacity:1}100%{transform:translateY(-50%) scale(1);opacity:1}}
       .hero-bg{position:absolute;inset:0;background-image:url('/shogroo-comingsoon.png');background-size:cover;background-position:center;filter:contrast(1.02) saturate(1.05);z-index:0}
       .hero-content{max-width:980px;text-align:center;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
       .title{font-size:clamp(28px,6vw,56px);margin:0 0 12px;letter-spacing:-0.02em;color:#ffffff;text-shadow:0 12px 30px rgba(2,6,23,0.6)}

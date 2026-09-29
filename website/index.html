@@ -16,10 +16,6 @@
     <main class="hero">
       <div class="hero-bg" aria-hidden="true"></div>
 
-      <div class="hero-content">
-        <p class="subtitle">Beautifully simple storefronts — crafted with care.</p>
-      </div>
-
       <div id="flowers" aria-hidden="true"></div>
       <div id="confetti" aria-hidden="true"></div>
     </main>
@@ -46,37 +42,48 @@
         }
       })();
 
-      // Confetti burst: create a handful of confetti pieces and animate once
+      // Confetti burst: create a handful of confetti pieces and animate once — only on first visit
       (function(){
-        const root = document.getElementById('confetti') || document.querySelector('.header-confetti');
-        if(!root) return;
-        const colors = ['#ff5e7a','#ffb86b','#ffd76b','#8be6a7','#7cc7ff','#c792ea'];
-        const pieces = 40;
-        const rect = root.getBoundingClientRect();
-        const centerX = rect.left + rect.width/2;
-        const centerY = rect.top + rect.height/2;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        try {
+          const seenKey = 'shogroo_first_visit';
+          const url = new URL(window.location.href);
+          const force = url.searchParams.get('celebrate') === '1';
+          if (!force && localStorage.getItem(seenKey)) return;
+          localStorage.setItem(seenKey, '1');
 
-        for(let i=0;i<pieces;i++){
-          const el = document.createElement('div');
-          el.className = 'confetti';
-          el.style.background = colors[Math.floor(Math.random()*colors.length)];
-          const angle = (Math.random()*Math.PI*2);
-          const dist = 60 + Math.random()*220;
-          const tx = Math.cos(angle)*dist + (Math.random()*80-40);
-          const ty = -Math.abs(Math.sin(angle))* (120 + Math.random()*300);
-          el.style.left = (centerX + (Math.random()*80-40)) + 'px';
-          el.style.top = (centerY + (Math.random()*40-20)) + 'px';
-          el.style.setProperty('--tx', tx+'px');
-          el.style.setProperty('--ty', ty+'px');
-          el.style.transform = 'translate(0,0)';
-          el.style.opacity = '1';
-          el.style.animation = 'confetti-burst ' + (900 + Math.floor(Math.random()*900)) + 'ms cubic-bezier(.2,.8,.2,1) forwards';
-          el.style.zIndex = 10;
-          document.body.appendChild(el);
+          const root = document.getElementById('confetti') || document.querySelector('.header-confetti');
+          if(!root) return;
+          const colors = ['#ff5e7a','#ffb86b','#ffd76b','#8be6a7','#7cc7ff','#c792ea'];
+          const pieces = 40;
+          const rect = root.getBoundingClientRect();
+          const centerX = rect.left + rect.width/2;
+          const centerY = rect.top + rect.height/2;
+
+          for(let i=0;i<pieces;i++){
+            const el = document.createElement('div');
+            el.className = 'confetti';
+            el.style.background = colors[Math.floor(Math.random()*colors.length)];
+            const angle = (Math.random()*Math.PI*2);
+            const dist = 60 + Math.random()*220;
+            const tx = Math.cos(angle)*dist + (Math.random()*80-40);
+            const ty = -Math.abs(Math.sin(angle))* (120 + Math.random()*300);
+            el.style.left = (centerX + (Math.random()*80-40)) + 'px';
+            el.style.top = (centerY + (Math.random()*40-20)) + 'px';
+            el.style.setProperty('--tx', tx+'px');
+            el.style.setProperty('--ty', ty+'px');
+            el.style.transform = 'translate(0,0)';
+            el.style.opacity = '1';
+            el.style.animation = 'confetti-burst ' + (900 + Math.floor(Math.random()*900)) + 'ms cubic-bezier(.2,.8,.2,1) forwards';
+            el.style.zIndex = 10;
+            document.body.appendChild(el);
+          }
+
+          // cleanup
+          setTimeout(()=>{ document.querySelectorAll('.confetti').forEach(n=>n.remove()); }, 2200);
+        } catch(e) {
+          // ignore storage errors
         }
-
-        // cleanup
-        setTimeout(()=>{ document.querySelectorAll('.confetti').forEach(n=>n.remove()); }, 2200);
       })();
     </script>
     <style>

@@ -19,6 +19,13 @@
       <div id="confetti" aria-hidden="true"></div>
     </main>
 
+    <div id="audio-permission" class="audio-permission" aria-hidden="true">
+      <div class="audio-card">
+        <p>Tap to enable celebration sound</p>
+        <button id="enable-audio">Enable sound</button>
+      </div>
+    </div>
+
     <script>
       // Celebration flow: confetti + sparkles + applause sound for 10s on every load
       (function(){
@@ -50,6 +57,7 @@
 
           // applause sound (attempt autoplay). This may be blocked by some browsers.
           const audio = document.createElement('audio');
+          audio.id = 'applause-audio';
           audio.src = '/audio/applause.mp3';
           audio.preload = 'auto';
           audio.volume = 0.9;
@@ -58,7 +66,7 @@
           document.body.appendChild(audio);
           const tryPlay = ()=>{
             const p = audio.play();
-            if (p && p.then) { p.catch(()=>{}); }
+            if (p && p.then) { p.catch(()=>{ /* show enable UI */ showAudioPermission(); }); }
           };
           // attempt to resume AudioContext if present
           try {
@@ -71,6 +79,26 @@
           tryPlay();
           // stop sound after duration
           setTimeout(()=>{ try{ audio.pause(); audio.currentTime = 0; audio.remove(); }catch(e){} }, duration + 200);
+
+          // audio permission UI handlers
+          function showAudioPermission(){
+            const overlay = document.getElementById('audio-permission');
+            if(!overlay) return;
+            overlay.style.display = 'flex';
+          }
+          document.addEventListener('click', function onFirstInteraction(){
+            const overlay = document.getElementById('audio-permission');
+            if(overlay && overlay.style.display === 'flex'){
+              const btn = document.getElementById('enable-audio');
+              if(btn){
+                btn.addEventListener('click', ()=>{
+                  try{ audio.play(); }catch(e){}
+                  overlay.style.display = 'none';
+                });
+              }
+            }
+            document.removeEventListener('click', onFirstInteraction);
+          });
 
         } catch(e) {
           // ignore
@@ -161,6 +189,11 @@
       .badge .ribbon.left{left:12px;transform:rotate(-18deg)}
       .badge .ribbon.right{right:12px;transform:rotate(18deg)}
       .badge .scissors{position:absolute;right:10px;top:10px;font-size:20px;opacity:0.95}
+      /* Audio permission overlay */
+      .audio-permission{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:40;pointer-events:auto}
+      .audio-card{background:rgba(255,255,255,0.98);padding:18px 22px;border-radius:12px;box-shadow:0 18px 50px rgba(2,6,23,0.12);text-align:center}
+      .audio-card p{margin:0 0 12px;font-weight:600}
+      .audio-card button{padding:8px 14px;border-radius:8px;border:none;background:#7c4dff;color:#fff;cursor:pointer}
     </style>
   </body>
 </html>

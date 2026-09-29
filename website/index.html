@@ -16,33 +16,12 @@
     <main class="hero">
       <div class="hero-bg" aria-hidden="true"></div>
 
-      <div id="flowers" aria-hidden="true"></div>
+      <div id="badge-holder" aria-hidden="true"></div>
       <div id="confetti" aria-hidden="true"></div>
     </main>
 
     <script>
-      // Create floating flowers on load
-      (function() {
-        const container = document.getElementById('flowers');
-        const count = 18;
-
-        for (let i = 0; i < count; i++) {
-          const span = document.createElement('span');
-          span.className = 'flower';
-          span.textContent = '🌸';
-
-          const size = 16 + Math.random() * 36; // px
-          span.style.fontSize = size + 'px';
-          span.style.left = (5 + Math.random() * 90) + '%';
-          span.style.animationDuration = (6 + Math.random() * 6) + 's';
-          span.style.animationDelay = (Math.random() * 3) + 's';
-          span.style.opacity = (0.6 + Math.random() * 0.4).toFixed(2);
-
-          container.appendChild(span);
-        }
-      })();
-
-      // Confetti burst: create a handful of confetti pieces and animate once — only on first visit
+      // Badge-cutting celebration (first visit)
       (function(){
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         try {
@@ -50,13 +29,45 @@
           const url = new URL(window.location.href);
           const force = url.searchParams.get('celebrate') === '1';
           if (!force && localStorage.getItem(seenKey)) return;
+          // mark as seen so it won't re-run on next visit
           localStorage.setItem(seenKey, '1');
 
-          const root = document.getElementById('confetti') || document.querySelector('.header-confetti');
-          if(!root) return;
+          const holder = document.getElementById('badge-holder');
+          if(!holder) return;
+
+          // build badge element
+          const badge = document.createElement('div');
+          badge.id = 'welcome-badge';
+          badge.className = 'badge';
+          badge.innerHTML = `
+            <div class="ribbon left"></div>
+            <div class="ribbon right"></div>
+            <div class="medal"><div class="medal-inner">SHOGROO</div></div>
+            <div class="scissors">✂️</div>
+          `;
+          holder.appendChild(badge);
+
+          // play animation sequence
+          requestAnimationFrame(()=>{
+            badge.classList.add('reveal');
+            // trigger confetti centered on header
+            if(window.createConfetti) window.createConfetti(document.querySelector('.header-confetti') || document.getElementById('confetti'));
+          });
+
+          // remove badge after animation
+          setTimeout(()=>{ badge.remove(); }, 2800);
+        } catch(e) {
+          // ignore
+        }
+      })();
+
+      // Confetti generator function (callable)
+      window.createConfetti = function(root){
+        try {
+          if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
           const colors = ['#ff5e7a','#ffb86b','#ffd76b','#8be6a7','#7cc7ff','#c792ea'];
           const pieces = 40;
-          const rect = root.getBoundingClientRect();
+          const rect = (root && root.getBoundingClientRect && root.getBoundingClientRect()) || {left: window.innerWidth/2, top: window.innerHeight/3, width: 0, height:0};
           const centerX = rect.left + rect.width/2;
           const centerY = rect.top + rect.height/2;
 
@@ -78,13 +89,9 @@
             el.style.zIndex = 10;
             document.body.appendChild(el);
           }
-
-          // cleanup
           setTimeout(()=>{ document.querySelectorAll('.confetti').forEach(n=>n.remove()); }, 2200);
-        } catch(e) {
-          // ignore storage errors
-        }
-      })();
+        } catch(e) {}
+      };
     </script>
     <style>
       :root{--accent:#7c4dff;--muted:#6b7280}
@@ -101,6 +108,8 @@
 
       /* Flowers container */
       #flowers{position:absolute;left:0;right:0;bottom:0;top:0;pointer-events:none;z-index:1}
+      /* Badge holder */
+      #badge-holder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2}
       /* Confetti burst (one-shot on load) */
       #confetti{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:visible}
       .confetti{position:absolute;width:10px;height:14px;border-radius:2px;will-change:transform,opacity;}
@@ -124,6 +133,16 @@
         .flower{animation:none}
         .hero-content{animation:none}
       }
+
+      /* Badge styling */
+      .badge{width:220px;height:120px;border-radius:18px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(180deg,#fff,#fffbf5);box-shadow:0 20px 50px rgba(2,6,23,0.12);transform:translateY(-20px) scale(0.9);opacity:0}
+      .badge.reveal{transform:translateY(0) scale(1);opacity:1;transition:transform 420ms cubic-bezier(.2,.8,.2,1),opacity 320ms}
+      .badge .medal{width:140px;height:80px;border-radius:40px;background:linear-gradient(180deg,#ffd76b,#ffb86b);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(12,16,24,0.12)}
+      .badge .medal-inner{font-weight:700;letter-spacing:1px;color:#3b2b00}
+      .badge .ribbon{position:absolute;width:36px;height:60px;top:10px;background:linear-gradient(180deg,#ff7b89,#ff4b6a);border-radius:6px}
+      .badge .ribbon.left{left:12px;transform:rotate(-18deg)}
+      .badge .ribbon.right{right:12px;transform:rotate(18deg)}
+      .badge .scissors{position:absolute;right:10px;top:10px;font-size:20px;opacity:0.95}
     </style>
   </body>
 </html>

@@ -16,47 +16,62 @@
     <main class="hero">
       <div class="hero-bg" aria-hidden="true"></div>
 
-      <div id="badge-holder" aria-hidden="true"></div>
       <div id="confetti" aria-hidden="true"></div>
     </main>
 
     <script>
-      // Badge-cutting celebration (runs on every page load for 10s)
+      // Celebration flow: confetti + sparkles + applause sound for 10s on every load
       (function(){
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         try {
-          const holder = document.getElementById('badge-holder');
-          if(!holder) return;
-
-          // build badge element
-          const badge = document.createElement('div');
-          badge.id = 'welcome-badge';
-          badge.className = 'badge';
-          badge.innerHTML = `
-            <div class="ribbon left"></div>
-            <div class="ribbon right"></div>
-            <div class="medal"><div class="medal-inner">SHOGROO</div></div>
-            <div class="scissors">✂️</div>
-          `;
-          holder.appendChild(badge);
-
-          // play animation sequence
-          requestAnimationFrame(()=>{
-            badge.classList.add('reveal');
-            if(window.createConfetti) window.createConfetti(document.querySelector('.header-confetti') || document.getElementById('confetti'));
-          });
-
-          // run confetti repeatedly for 10 seconds
-          const duration = 10000; // ms
+          const duration = 10000; // 10s
           const intervalMs = 800;
-          const stopAt = Date.now() + duration;
+
+          // repeated confetti bursts
           const int = setInterval(()=>{
             if(window.createConfetti) window.createConfetti(document.querySelector('.header-confetti') || document.getElementById('confetti'));
-            if(Date.now() > stopAt){ clearInterval(int); }
           }, intervalMs);
+          setTimeout(()=>{ clearInterval(int); }, duration);
 
-          // remove badge after duration
-          setTimeout(()=>{ badge.remove(); }, duration);
+          // sparkles: small floating stars for visual celebration
+          const root = document.getElementById('confetti');
+          const stars = [];
+          for(let i=0;i<18;i++){
+            const s = document.createElement('div');
+            s.className = 'cele-star';
+            s.style.left = (10 + Math.random()*80) + '%';
+            s.style.top = (20 + Math.random()*60) + '%';
+            s.style.opacity = (0.7 + Math.random()*0.3).toFixed(2);
+            s.style.animationDelay = (Math.random()*0.6) + 's';
+            root.appendChild(s);
+            stars.push(s);
+          }
+          setTimeout(()=>{ stars.forEach(n=>n.remove()); }, duration + 400);
+
+          // applause sound (attempt autoplay). This may be blocked by some browsers.
+          const audio = document.createElement('audio');
+          audio.src = '/audio/applause.mp3';
+          audio.preload = 'auto';
+          audio.volume = 0.9;
+          audio.loop = false;
+          audio.autoplay = false; // we'll start via JS
+          document.body.appendChild(audio);
+          const tryPlay = ()=>{
+            const p = audio.play();
+            if (p && p.then) { p.catch(()=>{}); }
+          };
+          // attempt to resume AudioContext if present
+          try {
+            if (window.AudioContext || window.webkitAudioContext) {
+              const C = window.AudioContext || window.webkitAudioContext;
+              const ctx = new C();
+              if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(()=>{});
+            }
+          } catch(e){}
+          tryPlay();
+          // stop sound after duration
+          setTimeout(()=>{ try{ audio.pause(); audio.currentTime = 0; audio.remove(); }catch(e){} }, duration + 200);
+
         } catch(e) {
           // ignore
         }
@@ -114,6 +129,8 @@
       /* Confetti burst (one-shot on load) */
       #confetti{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:visible}
       .confetti{position:absolute;width:10px;height:14px;border-radius:2px;will-change:transform,opacity;}
+      .cele-star{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(#fff,#ffd76b);box-shadow:0 6px 18px rgba(255,183,98,0.12);animation:star-float 1400ms ease-in-out infinite}
+      @keyframes star-float{0%{transform:translateY(0) scale(0.9);opacity:0}10%{opacity:1}50%{transform:translateY(-36px) scale(1)}100%{transform:translateY(0) scale(0.9);opacity:0}}
       @keyframes confetti-burst {
         0%{transform:translate(0,0) rotate(0);opacity:1}
         100%{transform:translate(var(--tx),var(--ty)) rotate(540deg);opacity:0}
@@ -135,7 +152,7 @@
         .hero-content{animation:none}
       }
 
-      /* Badge styling */
+      /* Badge styling (removed UI but keep in case) */
       .badge{width:220px;height:120px;border-radius:18px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(180deg,#fff,#fffbf5);box-shadow:0 20px 50px rgba(2,6,23,0.12);transform:translateY(-20px) scale(0.9);opacity:0}
       .badge.reveal{transform:translateY(0) scale(1);opacity:1;transition:transform 420ms cubic-bezier(.2,.8,.2,1),opacity 320ms}
       .badge .medal{width:140px;height:80px;border-radius:40px;background:linear-gradient(180deg,#ffd76b,#ffb86b);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(12,16,24,0.12)}

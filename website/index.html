@@ -16,6 +16,7 @@
     <main class="hero">
       <div class="hero-bg" aria-hidden="true"></div>
 
+      <div id="flowers" aria-hidden="true"></div>
       <div id="confetti" aria-hidden="true"></div>
     </main>
 
@@ -108,6 +109,41 @@
           setTimeout(()=>{ document.querySelectorAll('.confetti').forEach(n=>n.remove()); }, 2200);
         } catch(e) {}
       };
+
+      // Flowers flow from bottom: spawn flowers for `duration` ms on every load
+      (function(){
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        try {
+          const container = document.getElementById('flowers');
+          if (!container) return;
+          const duration = 10000; // ms
+          const interval = 250; // spawn every 250ms
+          const stopAt = Date.now() + duration;
+
+          function spawnOne(){
+            const span = document.createElement('span');
+            span.className = 'flower';
+            span.textContent = '🌸';
+            const size = 18 + Math.random()*40;
+            span.style.fontSize = size + 'px';
+            span.style.left = (8 + Math.random()*84) + '%';
+            const animDur = 6 + Math.random()*6; // seconds
+            span.style.animationDuration = animDur + 's';
+            span.style.animationDelay = '0s';
+            span.style.opacity = (0.6 + Math.random()*0.4).toFixed(2);
+            container.appendChild(span);
+            // remove after animation finished
+            setTimeout(()=>{ try{ span.remove(); }catch(e){} }, (animDur*1000) + 800);
+          }
+
+          // immediate small burst
+          for(let i=0;i<6;i++) spawnOne();
+          const id = setInterval(()=>{
+            if (Date.now() > stopAt){ clearInterval(id); return; }
+            spawnOne();
+          }, interval);
+        } catch(e){}
+      })();
     </script>
     <style>
       :root{--accent:#7c4dff;--muted:#6b7280}

@@ -21,17 +21,10 @@
     </main>
 
     <script>
-      // Badge-cutting celebration (first visit)
+      // Badge-cutting celebration (runs on every page load for 10s)
       (function(){
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         try {
-          const seenKey = 'shogroo_first_visit';
-          const url = new URL(window.location.href);
-          const force = url.searchParams.get('celebrate') === '1';
-          if (!force && localStorage.getItem(seenKey)) return;
-          // mark as seen so it won't re-run on next visit
-          localStorage.setItem(seenKey, '1');
-
           const holder = document.getElementById('badge-holder');
           if(!holder) return;
 
@@ -50,12 +43,20 @@
           // play animation sequence
           requestAnimationFrame(()=>{
             badge.classList.add('reveal');
-            // trigger confetti centered on header
             if(window.createConfetti) window.createConfetti(document.querySelector('.header-confetti') || document.getElementById('confetti'));
           });
 
-          // remove badge after animation
-          setTimeout(()=>{ badge.remove(); }, 2800);
+          // run confetti repeatedly for 10 seconds
+          const duration = 10000; // ms
+          const intervalMs = 800;
+          const stopAt = Date.now() + duration;
+          const int = setInterval(()=>{
+            if(window.createConfetti) window.createConfetti(document.querySelector('.header-confetti') || document.getElementById('confetti'));
+            if(Date.now() > stopAt){ clearInterval(int); }
+          }, intervalMs);
+
+          // remove badge after duration
+          setTimeout(()=>{ badge.remove(); }, duration);
         } catch(e) {
           // ignore
         }

@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure AWS credentials (OIDC)
-        if: ${{ env.AWS_ROLE_TO_ASSUME != '' }}
+        if: ${{ env.AWS_ROLE_TO_ASSUME }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
@@ -27,12 +27,19 @@ jobs:
           role-session-name: github-actions
 
       - name: Configure AWS credentials (fallback)
-        if: ${{ env.AWS_ROLE_TO_ASSUME == '' }}
+        if: ${{ env.AWS_ACCESS_KEY_ID }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
+
+      - name: Verify AWS credentials
+        run: |
+          if ! aws sts get-caller-identity --output text >/dev/null 2>&1; then
+            echo "ERROR: AWS credentials not configured or invalid. Set 'AWS_ROLE_TO_ASSUME' (preferred) or 'AWS_ACCESS_KEY_ID'/'AWS_SECRET_ACCESS_KEY' in repository secrets." >&2
+            exit 1
+          fi
 
       - name: Install AWS CLI
         run: |

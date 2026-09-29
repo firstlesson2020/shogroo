@@ -15,6 +15,7 @@
       </div>
 
       <div id="flowers" aria-hidden="true"></div>
+      <div id="confetti" aria-hidden="true"></div>
     </main>
 
     <script>
@@ -38,6 +39,38 @@
           container.appendChild(span);
         }
       })();
+
+      // Confetti burst: create a handful of confetti pieces and animate once
+      (function(){
+        const confettiRoot = document.getElementById('confetti');
+        if(!confettiRoot) return;
+        const colors = ['#ff5e7a','#ffb86b','#ffd76b','#8be6a7','#7cc7ff','#c792ea'];
+        const pieces = 40;
+        const centerX = window.innerWidth/2;
+        const centerY = window.innerHeight/3;
+
+        for(let i=0;i<pieces;i++){
+          const el = document.createElement('div');
+          el.className = 'confetti';
+          el.style.background = colors[Math.floor(Math.random()*colors.length)];
+          const angle = (Math.random()*Math.PI*2);
+          const dist = 80 + Math.random()*360;
+          const tx = Math.cos(angle)*dist + (Math.random()*80-40);
+          const ty = -Math.abs(Math.sin(angle))* (200 + Math.random()*400);
+          el.style.left = (centerX + (Math.random()*80-40)) + 'px';
+          el.style.top = (centerY + (Math.random()*40-20)) + 'px';
+          el.style.setProperty('--tx', tx+'px');
+          el.style.setProperty('--ty', ty+'px');
+          el.style.transform = 'translate(0,0)';
+          el.style.opacity = '1';
+          el.style.animation = 'confetti-burst ' + (900 + Math.floor(Math.random()*900)) + 'ms cubic-bezier(.2,.8,.2,1) forwards';
+          el.style.zIndex = 4;
+          confettiRoot.appendChild(el);
+        }
+
+        // remove confetti after animation completes
+        setTimeout(()=>{ if(confettiRoot) confettiRoot.parentNode && confettiRoot.parentNode.removeChild(confettiRoot); }, 2200);
+      })();
     </script>
     <style>
       :root{--accent:#7c4dff;--muted:#6b7280}
@@ -49,7 +82,14 @@
       .subtitle{margin:0 0 20px;color:rgba(255,255,255,0.85);font-size:18px;text-shadow:0 8px 18px rgba(2,6,23,0.45)}
 
       /* Flowers container */
-      #flowers{position:absolute;left:0;right:0;bottom:0;top:0;pointer-events:none}
+      #flowers{position:absolute;left:0;right:0;bottom:0;top:0;pointer-events:none;z-index:1}
+      /* Confetti burst (one-shot on load) */
+      #confetti{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:visible}
+      .confetti{position:absolute;width:10px;height:14px;border-radius:2px;will-change:transform,opacity;}
+      @keyframes confetti-burst {
+        0%{transform:translate(0,0) rotate(0);opacity:1}
+        100%{transform:translate(var(--tx),var(--ty)) rotate(540deg);opacity:0}
+      }
       .flower{position:absolute;bottom:-40px;will-change:transform,opacity;display:inline-block;text-shadow:0 4px 14px rgba(12,16,24,0.08)}
       @keyframes rise {
         0%{transform:translateY(0) rotate(0deg);opacity:0}
@@ -59,7 +99,7 @@
       .flower{animation-name:rise;animation-timing-function:cubic-bezier(.2,.9,.2,1);}
 
       /* Add subtle entrance for hero */
-      .hero-content{transform:translateY(8px);opacity:0;animation:enter 650ms ease-out 120ms forwards}
+      .hero-content{transform:translateY(8px);opacity:0;animation:enter 650ms ease-out 120ms forwards;z-index:3}
       @keyframes enter{to{transform:none;opacity:1}}
 
       @media (prefers-reduced-motion: reduce){

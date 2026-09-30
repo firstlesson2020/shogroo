@@ -14,7 +14,10 @@
     </header>
 
     <main class="hero">
-      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-bg" aria-hidden="true">
+        <!-- Inline image for small screens to preserve full image without cropping -->
+        <img class="hero-img" src="/shogroo-comingsoon.png" alt="" aria-hidden="true">
+      </div>
 
       <div id="flowers" aria-hidden="true"></div>
       <div id="confetti" aria-hidden="true"></div>
@@ -156,6 +159,7 @@
       .header-bloom{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff6e6,#ffd76b);box-shadow:0 12px 30px rgba(255,180,80,0.18);display:flex;align-items:center;justify-content:center;font-weight:700;color:#3b2b00;z-index:12;animation:bloom 550ms cubic-bezier(.2,.8,.2,1) forwards}
       @keyframes bloom{0%{transform:translateY(-50%) scale(0.2);opacity:0}50%{transform:translateY(-50%) scale(1.12);opacity:1}100%{transform:translateY(-50%) scale(1);opacity:1}}
       .hero-bg{position:absolute;inset:0;background-image:url('/shogroo-comingsoon.png');background-size:cover;background-position:center center;background-repeat:no-repeat;background-attachment:scroll;filter:contrast(1.02) saturate(1.05);z-index:0}
+      .hero-img{display:none;width:100%;height:auto;object-fit:contain}
       .hero-content{max-width:980px;text-align:center;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
       .title{font-size:clamp(28px,6vw,56px);margin:0 0 12px;letter-spacing:-0.02em;color:#ffffff;text-shadow:0 12px 30px rgba(2,6,23,0.6)}
       .subtitle{margin:0 0 20px;color:rgba(255,255,255,0.95);font-size:18px;text-shadow:0 8px 18px rgba(2,6,23,0.45)}
@@ -199,6 +203,8 @@
         .hero{padding:20px;min-height:70vh}
         /* show the full image on small screens without cropping */
         .hero-bg{background-position:top center;background-size:contain;background-repeat:no-repeat}
+        /* use inline image on very small screens to keep aspect ratio */
+        .hero-img{display:block}
         .site-title{font-size:15px;padding:6px 10px}
         .subtitle{font-size:15px}
         .header-bloom{right:10px;width:44px;height:44px}

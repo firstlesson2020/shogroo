@@ -196,8 +196,9 @@
         .site-title{font-size:18px}
       }
       @media (max-width: 640px){
-        .hero{padding:20px}
-        .hero-bg{background-position:top center}
+        .hero{padding:20px;min-height:70vh}
+        /* show the full image on small screens without cropping */
+        .hero-bg{background-position:top center;background-size:contain;background-repeat:no-repeat}
         .site-title{font-size:15px;padding:6px 10px}
         .subtitle{font-size:15px}
         .header-bloom{right:10px;width:44px;height:44px}

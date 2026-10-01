@@ -34,25 +34,16 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Configure AWS credentials (OIDC)
-        if: ${{ env.AWS_ROLE_TO_ASSUME }}
-        uses: aws-actions/configure-aws-credentials@v2
+        if: env.AWS_ROLE_TO_ASSUME != ''
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
           aws-region: ap-south-1
           role-session-name: github-actions
 
-      - name: Debug: verify AWS_ROLE_TO_ASSUME presence
-        run: |
-          if [ -z "${AWS_ROLE_TO_ASSUME}" ]; then
-            echo "AWS_ROLE_TO_ASSUME is empty"
-            exit 1
-          else
-            echo "AWS_ROLE_TO_ASSUME is present"
-          fi
-
       - name: Configure AWS credentials (fallback)
-        if: ${{ env.AWS_ACCESS_KEY_ID }}
-        uses: aws-actions/configure-aws-credentials@v2
+        if: env.AWS_ROLE_TO_ASSUME == '' && env.AWS_ACCESS_KEY_ID != ''
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
@@ -61,9 +52,11 @@ jobs:
       - name: Verify AWS credentials
         run: |
           if ! aws sts get-caller-identity --output text >/dev/null 2>&1; then
-            echo "ERROR: AWS credentials not configured or invalid. Set 'AWS_ROLE_TO_ASSUME' (preferred) or 'AWS_ACCESS_KEY_ID'/'AWS_SECRET_ACCESS_KEY' in repository secrets." >&2
+            echo "ERROR: AWS credentials not configured or invalid." >&2
+            echo "Set AWS_ROLE_TO_ASSUME (preferred) or access keys in the production environment secrets." >&2
             exit 1
           fi
+          aws sts get-caller-identity
 
       - name: Terraform init
         run: terraform -chdir=infra init -input=false

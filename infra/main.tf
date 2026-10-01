@@ -9,19 +9,18 @@ terraform {
 }
 
 provider "aws" {
-  alias   = "ap_south_1"
-  profile = "firstlesson"
   region  = "ap-south-1"
+  profile = var.aws_profile
 }
 
 provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
+  alias   = "us_east_1"
+  region  = "us-east-1"
+  profile = var.aws_profile
 }
 
 
 resource "aws_s3_bucket" "website" {
-  provider = aws.ap_south_1
   bucket   = "shogroo.com"
   acl      = "private"
 
@@ -30,14 +29,7 @@ resource "aws_s3_bucket" "website" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "block" {
-  bucket = aws_s3_bucket.website.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
+## public access block handled later; keep bucket private and secure
 
 # CloudFront Origin Access Identity to securely serve private S3
 resource "aws_cloudfront_origin_access_identity" "oai" {
@@ -63,36 +55,7 @@ resource "aws_s3_bucket_policy" "website_policy" {
 }
 
 ### ACM certificate in us-east-1 for CloudFront
-resource "aws_acm_certificate" "cert" {
-  provider      = aws.us_east_1
-  domain_name   = "shogroo.com"
-  validation_method = "DNS"
 
-  tags = {
-    Name = "shogroo-cert"
-  }
-}
-
-data "aws_route53_zone" "zone" {
-  name         = "shogroo.com."
-  private_zone = false
-}
-
-resource "aws_route53_record" "cert_validation" {
-  for_each = { for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => dvo }
-
-  zone_id = data.aws_route53_zone.zone.zone_id
-  name    = each.value.resource_record_name
-  type    = each.value.resource_record_type
-  ttl     = 300
-  records = [each.value.resource_record_value]
-}
-
-resource "aws_acm_certificate_validation" "cert_validation" {
-  provider                = aws.us_east_1
-  certificate_arn         = aws_acm_certificate.cert.arn
-  validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
-}
 
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
@@ -130,17 +93,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = aws_acm_certificate.cert.arn
-    ssl_support_method             = "sni-only"
+    cloudfront_default_certificate = true
     minimum_protocol_version       = "TLSv1.2_2021"
   }
-
-  aliases = ["shogroo.com"]
 
   tags = {
     Name = "shogroo-cdn"
   }
-  depends_on = [aws_acm_certificate_validation.cert_validation]
 }
 
 resource "aws_s3_bucket_public_access_block" "block" {

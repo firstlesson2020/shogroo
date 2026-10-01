@@ -16,10 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     env:
-      # From infra outputs (local state is not available in CI)
-      
-    S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-    CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+      CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 
     steps:
       - name: Checkout
@@ -38,10 +36,19 @@ jobs:
         run: aws sts get-caller-identity
 
       - name: Sync website to S3
-        run: aws s3 sync website/ s3://"$S3_BUCKET_NAME" --delete
+        run: |
+          if [ -z "$S3_BUCKET_NAME" ]; then
+            echo "ERROR: Set production environment secret S3_BUCKET_NAME" >&2
+            exit 1
+          fi
+          aws s3 sync website/ s3://"$S3_BUCKET_NAME" --delete
 
       - name: Invalidate CloudFront cache
         run: |
+          if [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+            echo "ERROR: Set production environment secret CLOUDFRONT_DISTRIBUTION_ID" >&2
+            exit 1
+          fi
           aws cloudfront create-invalidation \
             --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
             --paths "/*"

@@ -1,4 +1,4 @@
-name: Website - Deploy & CDN Invalidation
+name: Website - Deploy & CDN Invalidation 
 
 permissions:
   id-token: write

@@ -1,4 +1,4 @@
-name: Website - Deploy & CDN Invalidation 
+name: Infrastructure - Terraform
 
 permissions:
   id-token: write
@@ -7,23 +7,31 @@ permissions:
 on:
   push:
     branches: [ main ]
-    paths: [ 'website/**' ]
+    paths: [ 'infra/**' ]
+  pull_request:
+    paths: [ 'infra/**' ]
   workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Sync site and invalidate CDN
+  terraform:
+    name: Terraform
     runs-on: ubuntu-latest
     environment: production
     env:
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
 
       - name: Configure AWS credentials (OIDC)
         if: ${{ env.AWS_ROLE_TO_ASSUME }}
@@ -57,17 +65,12 @@ jobs:
             exit 1
           fi
 
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+      - name: Terraform init
+        run: terraform -chdir=infra init -input=false
 
-      - name: Sync website to S3
-        run: |
-          BUCKET=$(terraform -chdir=infra output -raw s3_bucket_name)
-          aws s3 sync website/ s3://$BUCKET --delete
+      - name: Terraform plan
+        run: terraform -chdir=infra plan -out=tfplan -input=false
 
-      - name: Invalidate CloudFront cache
-        run: |
-          DIST_ID=$(terraform -chdir=infra output -raw cloudfront_distribution_id)
-          aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*" || true
+      - name: Terraform apply (main pushes)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform -chdir=infra apply -auto-approve tfplan

@@ -1,0 +1,10 @@
+name: Workflow Metadata Refresh
+
+on:
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "refresh"

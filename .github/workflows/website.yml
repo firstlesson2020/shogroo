@@ -15,18 +15,17 @@ jobs:
     name: Sync site and invalidate CDN
     runs-on: ubuntu-latest
     environment: production
+    env:
+      # From infra outputs (local state is not available in CI)
+      
+    S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+    CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0
-          terraform_wrapper: false
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -38,15 +37,11 @@ jobs:
       - name: Verify AWS credentials
         run: aws sts get-caller-identity
 
-      - name: Terraform init (for outputs)
-        run: terraform -chdir=infra init -input=false
-
       - name: Sync website to S3
-        run: |
-          BUCKET=$(terraform -chdir=infra output -raw s3_bucket_name)
-          aws s3 sync website/ s3://"$BUCKET" --delete
+        run: aws s3 sync website/ s3://"$S3_BUCKET_NAME" --delete
 
       - name: Invalidate CloudFront cache
         run: |
-          DIST_ID=$(terraform -chdir=infra output -raw cloudfront_distribution_id)
-          aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*" || true
+          aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/*"

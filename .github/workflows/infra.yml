@@ -41,6 +41,15 @@ jobs:
           aws-region: ap-south-1
           role-session-name: github-actions
 
+      - name: Debug: verify AWS_ROLE_TO_ASSUME presence
+        run: |
+          if [ -z "${AWS_ROLE_TO_ASSUME}" ]; then
+            echo "AWS_ROLE_TO_ASSUME is empty"
+            exit 1
+          else
+            echo "AWS_ROLE_TO_ASSUME is present"
+          fi
+
       - name: Configure AWS credentials (fallback)
         if: ${{ env.AWS_ACCESS_KEY_ID }}
         uses: aws-actions/configure-aws-credentials@v2

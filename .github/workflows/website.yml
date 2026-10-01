@@ -29,6 +29,22 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - name: Debug OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const core = require('@actions/core');
+            const token = await core.getIDToken('sts.amazonaws.com');
+            const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+            console.log({
+              sub: payload.sub,
+              aud: payload.aud,
+              iss: payload.iss,
+              repository: payload.repository,
+              repository_id: payload.repository_id,
+              job_workflow_ref: payload.job_workflow_ref
+            });
+
       - name: Configure AWS credentials (OIDC)
         if: env.AWS_ROLE_TO_ASSUME != ''
         uses: aws-actions/configure-aws-credentials@v4

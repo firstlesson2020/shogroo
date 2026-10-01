@@ -1,4 +1,4 @@
-name: Infrastructure — Terraform CI
+name: Infrastructure - Terraform CI
 
 permissions:
   id-token: write

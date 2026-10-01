@@ -10,10 +10,8 @@ resource "aws_iam_role" "github_actions" {
   provider = aws.us_east_1
   name = "github-actions-role-shogroo"
 
-  # GitHub OIDC `sub` examples when using environment: production:
-  #   repo:firstlesson2020/shogroo:environment:production
-  # Do NOT put owner/repo numeric IDs inside `sub` — use repository_id claim instead.
-  # Wildcards require StringLike (StringEquals is exact match only).
+  # Custom GitHub OIDC subject claim (org/repo Actions OIDC settings):
+  #   repo:firstlesson2020@62870203/shogroo@1395537535:environment:production
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -25,11 +23,10 @@ resource "aws_iam_role" "github_actions" {
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud"            = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:repository_id" = "1395537535"
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:firstlesson2020/shogroo:*"
+            "token.actions.githubusercontent.com:sub" = "repo:firstlesson2020@62870203/shogroo@1395537535:*"
           }
         }
       }

@@ -4,9 +4,6 @@ variable "route53_zone_id" {
   default     = ""
 }
 
-variable "aws_profile" {
-  description = "AWS CLI profile to use for provider authentication"
-  type        = string
-  default     = "firstlesson"
-}
+# Local only: export AWS_PROFILE=firstlesson
+# CI uses OIDC env credentials from GitHub Actions.
 
